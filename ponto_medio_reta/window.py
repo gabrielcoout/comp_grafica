@@ -3,28 +3,29 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QMainWindow, QLabel, QSpinBox, QFrame
 )
-from algoritmo import VisualizadorDeLinha
-
-LIMITE_GRID = 500
-
+from ponto_medio_reta.algoritmo import VisualizadorDeLinha # Importa o widget de desenho
 
 class JanelaPrincipal(QMainWindow):
+    """
+    Define a janela principal da aplicação, incluindo os controles
+    de entrada e a tela de visualização.
+    """
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Algoritmo do Ponto Médio - Bresenham")
         
-        self.grid = 20
+        self.limite_grade = 20
         
-        self.tela = VisualizadorDeLinha(self.grid)
+        # Cria a instância do nosso widget de desenho customizado
+        self.tela = VisualizadorDeLinha(self.limite_grade)
 
         # Configura os widgets de controle (SpinBoxes)
         self.seletor_x1 = QSpinBox()
         self.seletor_y1 = QSpinBox()
         self.seletor_x2 = QSpinBox()
         self.seletor_y2 = QSpinBox()
-        
         for seletor in [self.seletor_x1, self.seletor_y1, self.seletor_x2, self.seletor_y2]:
-            seletor.setRange(0, self.grid)
+            seletor.setRange(0, self.limite_grade)
 
         # Define valores iniciais
         self.seletor_x1.setValue(1)
@@ -33,11 +34,6 @@ class JanelaPrincipal(QMainWindow):
         self.seletor_y2.setValue(8)
 
         self.botao_desenhar = QPushButton("Desenhar")
-        
-        # NOVO: Criação do seletor para o tamanho da grade
-        self.seletor_limite_grade = QSpinBox()
-        self.seletor_limite_grade.setRange(5, LIMITE_GRID) # Define um limite razoável
-        self.seletor_limite_grade.setValue(self.grid)
 
         # Monta o layout dos controles
         layout_controles = self._criar_layout_controles()
@@ -50,12 +46,15 @@ class JanelaPrincipal(QMainWindow):
         widget_central = QWidget()
         widget_central.setLayout(layout_principal)
         self.setCentralWidget(widget_central)
+
+        # Conecta o sinal do botão à função de desenho
         self.botao_desenhar.clicked.connect(self.desenhar)
-        self.seletor_limite_grade.valueChanged.connect(self.atualizar_grid)
         
+        # Desenha a linha inicial
         self.desenhar()
 
     def _criar_layout_controles(self):
+        """Cria e retorna o layout para os controles de entrada."""
         layout = QHBoxLayout()
         layout.addWidget(QLabel("P1:"))
         layout.addWidget(QLabel("x:"))
@@ -75,25 +74,8 @@ class JanelaPrincipal(QMainWindow):
         layout.addWidget(self.seletor_y2)
 
         layout.addStretch()
-        
-        layout.addWidget(QLabel("Tamanho da Grade:"))
-        layout.addWidget(self.seletor_limite_grade)
-        
-        separador2 = QFrame() # Adiciona um separador visual
-        separador2.setFrameShape(QFrame.Shape.VLine)
-        separador2.setFrameShadow(QFrame.Shadow.Sunken)
-        layout.addWidget(separador2)
-        
         layout.addWidget(self.botao_desenhar)
         return layout
-
-    def atualizar_grid(self):
-        novo_limite = self.seletor_limite_grade.value()
-        self.grid = novo_limite
-        self.tela.definir_limite_grade(novo_limite)
-        for seletor in [self.seletor_x1, self.seletor_y1, self.seletor_x2, self.seletor_y2]:
-            seletor.setRange(0, novo_limite)
-        self.desenhar()
 
     def desenhar(self):
         x1 = self.seletor_x1.value()
