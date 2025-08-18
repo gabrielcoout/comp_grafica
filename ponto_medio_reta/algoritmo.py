@@ -17,9 +17,12 @@ class VisualizadorDeLinha(QWidget):
 
     def algoritmo_ponto_medio(self, painter, x1, y1, x2, y2):
         """Implementação do algoritmo de Bresenham para desenhar uma linha."""
+
+        # Inclinação da reta
         dx = x2 - x1
         dy = y2 - y1
 
+        # Direções de incremento (sinal)
         sx = 1 if dx >= 0 else -1
         sy = 1 if dy >= 0 else -1
 
@@ -27,8 +30,28 @@ class VisualizadorDeLinha(QWidget):
         dy = abs(dy)
         
         x, y = x1, y1
+
+        # Caso linha vertical (x constante)
+        if dx == 0:
+            y = y1
+            painter.drawPoint(x, y)
+            for _ in range(dy):
+                y += sy
+                painter.drawPoint(x, y)
+            return
+
+        # Caso linha horizontal (y constante)
+        if dy == 0:
+            x = x1
+            painter.drawPoint(x, y)
+            for _ in range(dx):
+                x += sx
+                painter.drawPoint(x, y)
+            return
+
         
         if dx >= dy:
+            # Caso em que a linha é mais horizontal (|dx| >= |dy|)
             d = 2 * dy - dx
             incE = 2 * dy
             incNE = 2 * (dy - dx)
@@ -36,12 +59,15 @@ class VisualizadorDeLinha(QWidget):
             for _ in range(dx + 1):
                 painter.drawPoint(x, y)
                 if d <= 0:
+                    # Próximo ponto está na direção leste (E)
                     d += incE
                 else:
+                    # Próximo ponto está na direção nordeste (NE)
                     d += incNE
                     y += sy
                 x += sx
         else:
+            # Caso em que a linha é mais vertical (|dy| > |dx|)
             d = 2 * dx - dy
             incE = 2 * dx
             incNE = 2 * (dx - dy)
@@ -49,8 +75,10 @@ class VisualizadorDeLinha(QWidget):
             for _ in range(dy + 1):
                 painter.drawPoint(x, y)
                 if d <= 0:
+                    # Próximo ponto está na direção norte (N)
                     d += incE
                 else:
+                    # Próximo ponto está na direção nordeste (NE)
                     d += incNE
                     x += sx
                 y += sy
