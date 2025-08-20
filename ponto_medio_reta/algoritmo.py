@@ -83,6 +83,8 @@ class VisualizadorDeLinha(QWidget):
                     x += sx
                 y += sy
 
+                
+
     def desenhar_grid(self, painter):
         """Desenha a grade e os eixos no fundo do widget."""
         caneta_grade = QPen(QColor(220, 220, 220), 0)

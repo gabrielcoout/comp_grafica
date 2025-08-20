@@ -2,9 +2,9 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QPen, QColor
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal 
-import numpy as np 
-from numpy import cos, sin, pi 
+from math import factorial, pi
 import time
+import numpy as np
 
 class VisualizadorCirculo(QWidget):
     calculoFinalizado = pyqtSignal(float)
@@ -26,35 +26,104 @@ class VisualizadorCirculo(QWidget):
         self.limite_grade = novo_limite
         self.update()
 
-    # Algoritmo Trigonométrico
+    def _taylor_sin(self, x, termos=5):
+        """ Aproximação de sin(x) por série de Taylor """
+        resultado = 0.0
+        sinal = 1
+        for n in range(termos):
+            termo = (x**(2*n + 1)) / factorial(2*n + 1)
+            resultado += sinal * termo
+            sinal *= -1
+        return resultado
+
+    def _taylor_cos(self, x, termos=5):
+        """ Aproximação de cos(x) por série de Taylor """
+        resultado = 0.0
+        sinal = 1
+        for n in range(termos):
+            termo = (x**(2*n)) / factorial(2*n)
+            resultado += sinal * termo
+            sinal *= -1
+        return resultado
+    
+    # Algoritmo Trigonométrico para desenhar círculos
     def _circulo_trigonometrico(self, painter, R):
         inicio = time.perf_counter()
         
         if R == 0:
+            # Caso degenerado: círculo de raio zero é apenas um ponto
             painter.drawPoint(0, 0)
         else:
+            # Número de pontos proporcional ao perímetro do círculo (2πR)
             num_passos = int(2 * pi * R)
+            # Varremos o ângulo theta de 0 a 2π
             for theta in np.linspace(0, 2 * pi, num_passos):
-                x = int(round(R * cos(theta))) 
-                y = int(round(R * sin(theta)))
+                # Fórmulas paramétricas: x = Rcosθ, y = Rsinθ
+                x = int(round(R * np.cos(theta))) 
+                y = int(round(R * np.sin(theta)))
                 painter.drawPoint(x, y)
 
         fim = time.perf_counter()
-        # MODIFICADO: Emite o sinal com o tempo de execução
+        # Emite o tempo total de execução
         self.calculoFinalizado.emit(fim - inicio)
 
-    def _ponto_medio_circulo(self, painter, R):
+    def _circulo_trigonometrico_delta(self, painter, R):
+        """
+        Algoritmo trigonométrico incremental para círculo,
+        usando apenas seno e cosseno aproximados por Taylor em Δθ.
+        """
         inicio = time.perf_counter()
 
         if R == 0:
             painter.drawPoint(0, 0)
         else:
+            # Número de pontos proporcional ao perímetro
+            num_passos = int(2 * pi * R)
+            delta = (2 * pi) / num_passos
+
+            # Aproximações de sin(Δθ) e cos(Δθ) por Taylor
+            cos_delta = self._taylor_cos(delta, termos=7)
+            sin_delta = self._taylor_sin(delta, termos=7)
+
+            # Ponto inicial (cos(0), sin(0)) = (1,0)
+            cos_theta = 1.0
+            sin_theta = 0.0
+
+            for _ in range(num_passos + 1):
+                x = int(round(R * cos_theta))
+                y = int(round(R * sin_theta))
+                painter.drawPoint(x, y)
+
+                # Atualização incremental via rotação
+                novo_cos = cos_theta * cos_delta - sin_theta * sin_delta
+                novo_sin = sin_theta * cos_delta + cos_theta * sin_delta
+                cos_theta, sin_theta = novo_cos, novo_sin
+
+        fim = time.perf_counter()
+        # Emite o sinal com o tempo de execução
+        self.calculoFinalizado.emit(fim - inicio)
+
+
+    def _ponto_medio_circulo(self, painter, R):
+        """
+        Desenha um círculo de raio R utilizando o algoritmo do ponto médio (Midpoint Circle Algorithm).
+        """
+        inicio = time.perf_counter()
+
+        if R == 0:
+            # Caso especial: círculo de raio zero é apenas um ponto
+            painter.drawPoint(0, 0)
+        else:
+            # Começa do ponto mais alto do círculo (0, R)
             x = 0
             y = R
+
+            # Parâmetro de decisão
             d = 1 - R
             
             while y >= x:
-                painter.drawPoint(x, y)
+                # Desenha os 8 pontos simétricos em relação ao centro
+                painter.drawPoint(x, y) 
                 painter.drawPoint(y, x)
                 painter.drawPoint(-x, y)
                 painter.drawPoint(-y, x)
@@ -64,13 +133,17 @@ class VisualizadorCirculo(QWidget):
                 painter.drawPoint(y, -x)
 
                 if d < 0:
+                    # Próximo ponto é o vizinho "leste" (E)
                     d += 2 * x + 3
                 else:
+                    # Próximo ponto é o vizinho "sudeste" (SE)
                     d += 2 * (x - y) + 5
                     y -= 1
+                # Avança em x
                 x += 1
         
         fim = time.perf_counter()
+        # Emite o tempo de execução
         self.calculoFinalizado.emit(fim - inicio)
             
     def _desenhar_grid(self, painter, escala):
@@ -119,7 +192,9 @@ class VisualizadorCirculo(QWidget):
 
             if self.algoritmo_id == "ponto_medio":
                 self._ponto_medio_circulo(painter, self.raio)
-            elif self.algoritmo_id == "trig":
+            elif self.algoritmo_id == "trig1":
                 self._circulo_trigonometrico(painter, self.raio)
+            elif self.algoritmo_id == "trig2":
+                self._circulo_trigonometrico_delta(painter, self.raio)
 
         painter.restore()

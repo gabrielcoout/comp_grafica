@@ -5,15 +5,19 @@ from PyQt6.QtWidgets import (
 )
 from algoritmo import VisualizadorDeLinha
 
-LIMITE_GRID = 500
+# Constantes
+MIN_GRID = 5
+MAX_GRID = 500
+GRID_INICIAL = 20
 
 
 class JanelaPrincipal(QMainWindow):
+    """Define a janela principal da aplicação, incluindo os controles de entrada e a tela de visualização."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Algoritmo do Ponto Médio - Bresenham")
         
-        self.grid = 20
+        self.grid = GRID_INICIAL
         
         self.tela = VisualizadorDeLinha(self.grid)
 
@@ -33,10 +37,8 @@ class JanelaPrincipal(QMainWindow):
         self.seletor_y2.setValue(8)
 
         self.botao_desenhar = QPushButton("Desenhar")
-        
-        # NOVO: Criação do seletor para o tamanho da grade
         self.seletor_limite_grade = QSpinBox()
-        self.seletor_limite_grade.setRange(5, LIMITE_GRID) # Define um limite razoável
+        self.seletor_limite_grade.setRange(MIN_GRID, MAX_GRID) # Define um limite razoável
         self.seletor_limite_grade.setValue(self.grid)
 
         # Monta o layout dos controles

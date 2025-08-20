@@ -8,7 +8,7 @@ from algoritmo import VisualizadorCirculo
 
 HEIGHT, WIDTH = 400, 400
 INITIAL_RADIUS = 10
-INITIAL_GRID_SIZE, GRID_MIN, GRID_MAX = 20, 10, 500
+INITIAL_GRID_SIZE, GRID_MIN, GRID_MAX = 50, 10, 2000
 
 class JanelaPrincipal(QMainWindow):
     def __init__(self):
@@ -28,7 +28,8 @@ class JanelaPrincipal(QMainWindow):
         self.slider_raio.setValue(10)
         self.label_raio_valor = QLabel(f"Raio (R): {self.slider_raio.value()}")
 
-        self.radio_trig = QRadioButton("Trigonométrico")
+        self.radio_trig = QRadioButton("Trigonométrico (Numpy)")
+        self.radio_trig2 = QRadioButton("Trigonométrico (Aproximação)")
         self.radio_ponto_medio = QRadioButton("Ponto Médio (Bresenham)")
         self.radio_ponto_medio.setChecked(True)
 
@@ -67,6 +68,7 @@ class JanelaPrincipal(QMainWindow):
         algoritmo_box = QGroupBox("Algoritmo")
         algoritmo_layout = QVBoxLayout()
         algoritmo_layout.addWidget(self.radio_trig)
+        algoritmo_layout.addWidget(self.radio_trig2)
         algoritmo_layout.addWidget(self.radio_ponto_medio)
         algoritmo_box.setLayout(algoritmo_layout)
         resultados_box = QGroupBox("Resultados")
@@ -98,6 +100,8 @@ class JanelaPrincipal(QMainWindow):
         
         id_algoritmo = "ponto_medio"
         if self.radio_trig.isChecked():
-            id_algoritmo = "trig"
+            id_algoritmo = "trig1"
+        elif self.radio_trig2.isChecked():
+            id_algoritmo = "trig2"
         
         self.tela.definir_circulo(R, id_algoritmo)
